@@ -1,13 +1,18 @@
-"""
-Kafka Avro Order Consumer.
-Consumes purchase orders, performs real-time running average price aggregation,
-implements exponential backoff retry logic, and routes failed messages to Dead Letter Queue (DLQ).
-"""
 import datetime
 import json
+import sys
 import time
+import warnings
 from collections import defaultdict
+from pathlib import Path
 from typing import Dict, Any, Optional
+
+warnings.filterwarnings("ignore")
+
+# Add project root to sys.path
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 
 from confluent_kafka import Consumer, Producer, KafkaError, KafkaException
 from confluent_kafka.serialization import SerializationContext, MessageField
@@ -208,7 +213,7 @@ class OrderConsumer:
             f"Running Avg: [bold yellow]${self.metrics.running_average:,.2f}[/bold yellow] (N={self.metrics.total_orders})"
         )
 
-    def run(self):
+    def run(self, max_runtime_sec: float = 0):
         """Main consumption loop."""
         topics = [TOPIC_ORDERS, TOPIC_RETRY]
         self.consumer.subscribe(topics)
@@ -224,8 +229,12 @@ class OrderConsumer:
             )
         )
 
+        start_time = time.time()
         try:
             while True:
+                if max_runtime_sec > 0 and (time.time() - start_time) >= max_runtime_sec:
+                    break
+
                 msg = self.consumer.poll(1.0)
                 if msg is None:
                     continue
@@ -310,6 +319,15 @@ class OrderConsumer:
             console.print("=" * 60)
 
 
-if __name__ == "__main__":
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Kafka Avro Order Consumer & Real-time Aggregator")
+    parser.add_argument("--timeout", type=float, default=0, help="Max seconds to run (0 for infinite)")
+    args = parser.parse_args()
+
     consumer = OrderConsumer()
-    consumer.run()
+    consumer.run(max_runtime_sec=args.timeout)
+
+
+if __name__ == "__main__":
+    main()

@@ -3,6 +3,17 @@ Dead Letter Queue (DLQ) Inspector & Consumer.
 Monitors the `orders-dlq` topic and renders real-time diagnostics on permanently failed messages.
 """
 import sys
+import time
+import warnings
+from pathlib import Path
+
+warnings.filterwarnings("ignore")
+
+# Add project root to sys.path
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 from confluent_kafka import Consumer, KafkaError
 from confluent_kafka.serialization import SerializationContext, MessageField
 from rich.console import Console
@@ -23,7 +34,7 @@ from src.schema_utils import (
 console = Console()
 
 
-def run_dlq_monitor():
+def run_dlq_monitor(max_runtime_sec: float = 0):
     sr_client = get_schema_registry_client(SCHEMA_REGISTRY_URL)
     dlq_deserializer = get_dlq_deserializer(sr_client)
 
@@ -48,8 +59,12 @@ def run_dlq_monitor():
     )
 
     dlq_count = 0
+    start_time = time.time()
     try:
         while True:
+            if max_runtime_sec > 0 and (time.time() - start_time) >= max_runtime_sec:
+                break
+
             msg = consumer.poll(1.0)
             if msg is None:
                 continue
@@ -104,5 +119,13 @@ def run_dlq_monitor():
         console.print(f"[bold red]DLQ Session Ended. Total Dead-Lettered Messages Inspected: {dlq_count}[/bold red]")
 
 
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Kafka Dead Letter Queue (DLQ) Monitor")
+    parser.add_argument("--timeout", type=float, default=0, help="Max seconds to run (0 for infinite)")
+    args = parser.parse_args()
+    run_dlq_monitor(max_runtime_sec=args.timeout)
+
+
 if __name__ == "__main__":
-    run_dlq_monitor()
+    main()

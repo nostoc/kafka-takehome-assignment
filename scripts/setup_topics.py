@@ -1,7 +1,12 @@
-"""
-Topic creation and broker readiness verification script.
-"""
+import sys
 import time
+from pathlib import Path
+
+# Add project root to python path
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 from confluent_kafka.admin import AdminClient, NewTopic
 from src.config import KAFKA_BOOTSTRAP_SERVERS, TOPIC_ORDERS, TOPIC_RETRY, TOPIC_DLQ
 

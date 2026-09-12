@@ -10,9 +10,9 @@ SCHEMAS_DIR = BASE_DIR / "schemas"
 ORDER_SCHEMA_PATH = SCHEMAS_DIR / "order.avsc"
 DLQ_SCHEMA_PATH = SCHEMAS_DIR / "order_dlq.avsc"
 
-# Kafka Connection
-KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-SCHEMA_REGISTRY_URL = os.getenv("SCHEMA_REGISTRY_URL", "http://localhost:8081")
+# Kafka Connection (use 127.0.0.1 for explicit IPv4 routing)
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "127.0.0.1:9092")
+SCHEMA_REGISTRY_URL = os.getenv("SCHEMA_REGISTRY_URL", "http://127.0.0.1:8081")
 
 # Topics
 TOPIC_ORDERS = os.getenv("TOPIC_ORDERS", "orders")
