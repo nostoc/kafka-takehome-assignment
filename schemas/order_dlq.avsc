@@ -1,0 +1,45 @@
+{
+  "type": "record",
+  "name": "OrderDLQ",
+  "namespace": "com.assignment.orders",
+  "doc": "Dead Letter Queue record schema for permanently failed orders",
+  "fields": [
+    {
+      "name": "orderId",
+      "type": "string",
+      "doc": "Identifier for the order or UNKNOWN"
+    },
+    {
+      "name": "product",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Product name if available"
+    },
+    {
+      "name": "price",
+      "type": ["null", "float"],
+      "default": null,
+      "doc": "Price if available"
+    },
+    {
+      "name": "originalPayload",
+      "type": "string",
+      "doc": "Original raw message representation"
+    },
+    {
+      "name": "errorMessage",
+      "type": "string",
+      "doc": "Error message / failure diagnosis"
+    },
+    {
+      "name": "retryCount",
+      "type": "int",
+      "doc": "Number of retry attempts executed"
+    },
+    {
+      "name": "failedAt",
+      "type": "string",
+      "doc": "Timestamp of final dead-lettering in ISO format"
+    }
+  ]
+}
